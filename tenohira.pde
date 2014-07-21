@@ -114,11 +114,18 @@ void draw() {
   image(Quants, CAM_W*2, 0);
   //////////////////////////////////////////////////////////////////
 
+
   ////////前処理のラベリング//////////////////////////////////////////
   Quants = Pre_Label(Quants);
   Quants.updatePixels();
   image(Quants, 0, CAM_H);
   /////////////////////////////////////////////////////////////////
+
+  /*下部の端と端をつなげる*/
+  Quants= waku(Quants);
+  Quants.updatePixels();//輪郭線の画像に上書きする。
+  /*下部の端と端をつなげるここまで*/
+
 
   /////////////////////////////////////////////////////////////////
   /////// 周囲(4ピクセル)の平均値と比較する(ラプラシアンフィルタ)//
@@ -127,11 +134,6 @@ void draw() {
   //image(Result, 0, CAM_H);    //Resultをx=CAM_W,y=CAM_Hに出力
   /////////////////////////////////////////////////////////////////
 
-  //////////////////下部の端と端をつなげる///////////////////
-  hasi();
-  Result.updatePixels();//輪郭線の画像に上書きする。
-  //image(Result, 0, CAM_H);
-  /////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////
   if ( tflag == true) {
@@ -401,6 +403,25 @@ PImage contraction(PImage FIL) {
 }
 //////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////
+/////端と端をつなげる////////////////////////////////////////
+PImage waku(PImage FIL) {
+  for (int i=0; i<CAM_W; i++) {//上辺
+    FIL.pixels[i]=0;
+  }
+  for (int i=CAM_W*(CAM_H-1); i<CAM_W*CAM_H; i++) {//下辺
+    FIL.pixels[i]=0;
+  }
+  for (int i=0; i<CAM_W*(CAM_H-1); i+=CAM_W) {//左辺
+    FIL.pixels[i]=0;
+  }
+  for (int i=CAM_W-1; i<CAM_W*CAM_H; i+=CAM_W) {//右辺
+    FIL.pixels[i]=0;
+  }
+  return FIL;
+}
+/////端と端をつなげるここまで////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////
 ////ラベリング（前処理）/////////////////////////////////
 PImage Pre_Label(PImage FIL) {  //FIL・・・ラベリングしたい画像PImageをもらう
@@ -589,51 +610,6 @@ void Rapu(PImage FIL) {
   //return Result;
 }
 ///ラプラシアンフィルタここまで//////////////////////////////////
-
-/////下部の端と端をつなげる////////////////////////////////////////
-void hasi() {
-  for (int i=1; i<CAM_W-2; i++) {//最下線
-    int x = (CAM_H-2)*CAM_W + i;
-    if (brightness(Result.pixels[x])==100 && brightness(Result.pixels[x+1])==0) {
-      Result.pixels[x+1] = color(360);
-    }
-    else if (brightness(Result.pixels[x])==100 && brightness(Result.pixels[x+1])==100) {
-      break;
-    }
-  }
-
-  for (int i=1; i<CAM_W-2; i++) {//最上線部
-    int x = i + CAM_W;
-    if (brightness(Result.pixels[x])==100 && brightness(Result.pixels[x+1])==0) {
-      Result.pixels[x+1] = color(360);
-    }
-    else if (brightness(Result.pixels[x])==100 && brightness(Result.pixels[x+1])==100) {
-      break;
-    }
-  }
-
-  for (int i=1; i<CAM_H-2; i++) {//最左線部
-    int x = CAM_W * i + 1; 
-    if (brightness(Result.pixels[x])==100 && brightness(Result.pixels[x+CAM_W])==0) {
-      Result.pixels[x+CAM_W] = color(360);
-    }
-    else if (brightness(Result.pixels[x])==100 && brightness(Result.pixels[x+CAM_W])==100) {
-      break;
-    }
-  }
-
-  for (int i=1; i<CAM_H-2; i++) { //最右線部
-    int x = CAM_W * i + CAM_W-2;
-    if (brightness(Result.pixels[x])==100 && brightness(Result.pixels[x+CAM_W])==0) {
-      Result.pixels[x+CAM_W] = color(360);
-    }
-    else if (brightness(Result.pixels[x])==100 && brightness(Result.pixels[x+CAM_W])==100) {
-      break;
-    }
-  }
-}
-/////////////////////////////////////////////////////////////////
-
 
 
 //////重心設置//////////////////////////////////////////////////
